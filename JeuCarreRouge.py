@@ -100,7 +100,7 @@ class Vue():
         self.modele=modele
         self.root=Tk()
         self.root.title('JEU DU CARRÉ ROUGE')
-        self.root.wm_attributes('-topmost', 1)  #Fenêtre de jeu en 1er plan
+        #   self.root.wm_attributes()  #Fenêtre de jeu en 1er plan
         
         self.aireDeJeu()
         menu = Menu(self.root)

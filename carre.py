@@ -1,99 +1,204 @@
-## -*- coding: utf8 -*-
+## -*- coding: utf-8 -*-
 from tkinter import *
+from tkinter import messagebox
+from timeit import default_timer
+"""
+Fenetre = Tk()
 
-class CarreRouge():
-    def __init__(self,posx,posy):
-        self.posx=posx
-        self.posy=posy 
-        self.couleur='red'
+def updatetime():
+    now = default_timer - start 
+    minutes, seconds = divmod(now, 60)
+    hours, minutes = divmod(now,60)
+    str_time = "%d:%02d:%02d" % (hours, minutes, seconds)
+    canvas.itemconfigure(text_clock, text=str_time)
+    Fenetre.after(1000, updatetime)
+"""
 
-        
-class Pion():
-    def __init__(self,parent,posx,posy,sizex,sizey):
-        self.parent=parent
-        self.posx=posx
-        self.posy=posy
-        self.sizex=sizex
-        self.sizey=sizey
-        self.vitesse=1
-        self.couleur='blue'
-    
-    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!    
-    def deplacer(self):
-           
-        self.posx-=self.vitesse
-        #self.posx+=self.vitesse   
-        self.posy-=self.vitesse
-        #self.posy+=self.vitesse
-        
-    
 
-class Vue():
-    def __init__(self, parent, modele):
-        self.parent=parent
-        self.modele=modele
-        self.root=Tk()
-        self.fenetre()
-
-        
-    def fenetre(self):
-        self.root.title('JEU CARRÉ ROUGE')
-        self.root.resizable(0, 0) # Empeche le resize de la fenetre
-        self.root.wm_attributes('-topmost', 1) # La fenetre est en 1er plan de tout
-        self.canvas=Canvas(self.root,width=450,height=450, bg="black")
-        self.canvas.pack()
-        self.canvas.bind("<Button-1>",self.demandeDeplacement)
-
-        
-    def demandeDeplacement(self, evt):
-        self.parent.demandeDeplacement()
-        print('demandeDeplacement')
-
-        
-    def afficheFenetre(self):
-        self.canvas.delete(ALL)
-        self.canvas.create_rectangle(50,50,400,400,fill='white') #Création du carré blanc
-        self.canvas.create_rectangle(205,205,245,245,fill='red')
-        for i in self.modele.pions:
-            self.canvas.create_rectangle(i.posx-(i.sizex/2),
-                                         i.posy-(i.sizey/2),
-                                         i.posx+(i.sizex/2),
-                                         i.posy+(i.sizey/2),
-                                         fill="blue",
-                                         tags=("Pion", str(i.posx),str(i.posy)))
-        
-    
-class Modele():
-    def __init__(self,parent):
-        self.largeur=450 #Largeur de l'aire de jeu
-        self.hauteur=450 #Hauteur de l'aire de jeu
-        #carreRouge=CarreRouge(self,225,225,40,40)
-        self.pions=[]
-        self.pions.append(Pion(self,100,100,60,60))
-        self.pions.append(Pion(self,300,85,60,50))
-        self.pions.append(Pion(self,85,350,30,60))
-        self.pions.append(Pion(self,355,340,100,20))
-    
-     
-    def demandeDeplacement(self):
-        for i in self.pions:
-            i.deplacer()
-
-    
 class Controleur():
     def __init__(self):
-        self.modele=Modele(self)
-        self.vue=Vue(self, self.modele)
-        self.vue.afficheFenetre()
+        self.chrono = 0
+        self.modele = Modele()
+        self.vue = Vue(self, self.modele)
+        self.vue.afficheAireDeJeu()
+        self.vue.root.after(1000, self.compterlessecondes)
         self.vue.root.mainloop()
 
     def demandeDeplacement(self):
-        self.modele.demandeDeplacement()
-        self.vue.afficheFenetre()
-        self.vue.root.after(5, self.demandeDeplacement) #Pilote automatique
+        self.modele.demandeDeplacementPions()
+        self.modele.testerCollision()
+        if self.modele.carreRouge.isAlive:
+            self.vue.afficheAireDeJeu()
+            self.vue.root.after(10, self.demandeDeplacement)
+        else:
+            self.vue.FinDuJeu()
+
+    # fonction appelee par la vue lorsqu'un mouvement de souris est detecte
+    def deplacer(self, x, y):
+        #if self.modele.carreRouge.isAlive:
+        # on requiert cette action aupres du modele
+        self.modele.carreRouge.deplacer(x, y)
+        # on requiert cette action aupres de la vue apres les modifs au modele
+        self.vue.afficheAireDeJeu()
+
+    def compterlessecondes(self):
+        self.chrono = self.chrono + 1
+
+
+class Pion():
+    def __init__(self, x, y, sizex, sizey, dirx, diry):
+        self.x = x
+        self.y = y
+        self.sizex = sizex/2
+        self.sizey = sizey/2
+        self.dirx = dirx
+        self.diry = diry
+        self.vitesse = 2
+
+    def deplacer(self):
+        self.x += self.dirx * self.vitesse
+        self.y += self.diry * self.vitesse
+
+        if self.x < 0 + self.sizex:
+            self.dirx = 1
+        elif self.x > 450 - self.sizex:
+            self.dirx = -1
+
+        if self.y < 0 + self.sizey:
+            self.diry = 1
+        elif self.y > 450 - self.sizey:
+            self.diry = -1
+
+
+class CarreRouge():
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.sizex = 40/2
+        self.sizey = 40/2
+        self.isAlive = True
+
+    def deplacer(self, x, y):
+        self.x = x
+        self.y = y
+
+        if self.x < 50 + self.sizex:
+            self.x = 50 + self.sizex
+            self.isAlive = False
+        elif self.x > 400 - self.sizex:
+            self.x = 400 - self.sizex
+            self.isAlive = False
+
+        if self.y < 50 + self.sizey:
+            self.y = 50 + self.sizey
+            self.isAlive = False
+        elif self.y > 400 - self.sizey:
+            self.y = 400 - self.sizey
+            self.isAlive = False
+
+
+class Modele():
+    def __init__(self):
+        self.hauteur = 450
+        self.largeur = 450
+        self.pions = []
+        self.pions.append(Pion(100, 100, 60, 60, 1, 1))
+        self.pions.append(Pion(300, 85, 60, 50, -1, 1))
+        self.pions.append(Pion(85, 350, 30, 60, 1, -1))
+        self.pions.append(Pion(355, 340, 100, 20, -1, -1))
+        self.carreRouge = CarreRouge(225, 225)
+
+    def demandeDeplacementPions(self):
+        for i in self.pions:
+            i.deplacer()
+
+    def testerCollision(self):
+        for i in self.pions:
+            if i.y+i.sizey > self.carreRouge.y-self.carreRouge.sizey and \
+               i.x-i.sizex < self.carreRouge.x+self.carreRouge.sizex and \
+               i.x+i.sizex > self.carreRouge.x-self.carreRouge.sizex and \
+               i.y-i.sizey < self.carreRouge.y+self.carreRouge.sizey:
+                self.carreRouge.isAlive = False
+
+
+class Vue():
+    def __init__(self, parent, modele):
+        self.parent = parent
+        self.modele = modele
+        self.root = Tk()
+        self.root.title('JEU DU CARRÉ ROUGE')
+        #   self.root.wm_attributes()  #Fenêtre de jeu en 1er plan
+
+        self.aireDeJeu()
+        menu = Menu(self.root)
+        self.root.config(menu=menu)
+
+        # ********* Menu **************
+        subMenu = Menu(menu)
+        menu.add_cascade(label="Fichier", menu=subMenu)
+        subMenu.add_command(label="Nouvelle partie")
+        subMenu.add_command(label="Scores")
+        subMenu.add_separator()
+        subMenu.add_command(label="Quiter", command=self.root.quit)
+
+        # ********* Status Bar **************
+        chronoString = "Chrono" + str(self.parent.chrono)
+        self.status = Label(self.root, text=chronoString,
+                            bd=1, relief=SUNKEN, anchor=W)
+        #self.status+=Label(self.root, text="SomeText", bd=1, relief=SUNKEN, anchor=E)
+        self.status.pack(side=BOTTOM, fill=X)
+
+    def aireDeJeu(self):
+        self.canvas = Canvas(self.root, width=450, height=450, bg='black')
+        self.canvas.pack()
+        if self.parent.modele.carreRouge.isAlive:
+            self.canvas.bind("<Button-1>", self.debuter)
+
+    # cette fonctione lance la capacite de suivi
+    def debuter(self, evt):
+        # on obtient les tags du dessin (un seul) sous la souris
+        t = self.canvas.gettags("current")
+        # le tuple de tags doit contenir la chaine de texte "carre" qui indique que
+        if "CarreRouge" in t:
+            # on lie l'evenement movement a une fonction pour deplacer le carre
+            self.canvas.bind("<B1-Motion>", self.deplacer)
+            # on lie l'evenement relache du clic a une fonction pour cesser le suivi de la souris par le carre
+            self.canvas.bind("<ButtonRelease-1>", self.relacher)
+            self.parent.demandeDeplacement()
+
+    def deplacer(self, evt):
+        # on avertit le parent des coordonnees actuelles de la souris
+        self.parent.deplacer(evt.x, evt.y)
+
+    def relacher(self, evt):
+        # on annule l'evenement de mouvement (on cesse de l'ecouter)
+        self.canvas.unbind("<B1-Motion>")
+
+    def afficheAireDeJeu(self):
+        # Efface tout le contenu de l'aire de jeu
+        self.canvas.delete(ALL)
+        # Affiche l'aire de jeu du carre rouge
+        self.canvas.create_rectangle(50, 50, 400, 400, fill='white')
+        for i in self.modele.pions:
+            self.canvas.create_rectangle(i.x-i.sizex,
+                                         i.y-i.sizey,
+                                         i.x+i.sizex,
+                                         i.y+i.sizey,
+                                         fill="blue",
+                                         tags=("Pion", str(i.x), str(i.y)))
+        self.canvas.create_rectangle(self.modele.carreRouge.x-self.modele.carreRouge.sizex,
+                                     self.modele.carreRouge.y-self.modele.carreRouge.sizey,
+                                     self.modele.carreRouge.x+self.modele.carreRouge.sizex,
+                                     self.modele.carreRouge.y+self.modele.carreRouge.sizey,
+                                     fill="red",
+                                     tags=("CarreRouge"))
+
+    def FinDuJeu(self):
+        self.canvas.delete(ALL)
+        messagebox.showinfo(message='Partie Finie')
 
 
 
 if __name__ == '__main__':
-    c=Controleur()
+    c = Controleur()
     print("Fin programme")
