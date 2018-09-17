@@ -123,8 +123,8 @@ class Vue():
     def aireDeJeu(self):    
         self.canvas=Canvas(self.root,width=450, height=450, bg='black')
         self.canvas.pack()
-        self.canvas.bind("<Button-1>", self.debuter)
-        
+        if self.parent.modele.carreRouge.isAlive:
+            self.canvas.bind("<Button-1>", self.debuter)
         
     def debuter(self,evt):                                      # cette fonctione lance la capacite de suivi
         t=self.canvas.gettags("current")                        # on obtient les tags du dessin (un seul) sous la souris
@@ -155,10 +155,11 @@ class Vue():
                                      self.modele.carreRouge.y+self.modele.carreRouge.sizey,
                                      fill="red",
                                      tags=("CarreRouge"))
+
     def FinDuJeu(self):
-        # https://tkdocs.com/tutorial/windows.html#dialogs
-        if True:
-            messagebox.showinfo(message='Partie Finie')
+        self.canvas.delete(ALL)
+        messagebox.showinfo(message='Partie Finie')
+
 
 class Controleur():
     def __init__(self):
@@ -172,9 +173,11 @@ class Controleur():
     def demandeDeplacement(self):
         self.modele.demandeDeplacementPions()
         self.modele.testerCollision()
-        self.vue.afficheAireDeJeu()
         if self.modele.carreRouge.isAlive:
+            self.vue.afficheAireDeJeu()
             self.vue.root.after(10, self.demandeDeplacement)
+        else:
+            self.vue.FinDuJeu()
 
     def deplacer(self,x,y):                                 # fonction appelee par la vue lorsqu'un mouvement de souris est detecte
         self.modele.carreRouge.deplacer(x,y)                # on requiert cette action aupres du modele
