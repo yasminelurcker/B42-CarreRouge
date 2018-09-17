@@ -115,13 +115,15 @@ class Vue():
         subMenu.add_command(label="Quiter", command=self.root.quit)
         
         # ********* Status Bar **************
-        self.status=Label(self.root, text="Status...", bd=1, relief=SUNKEN, anchor=W)
+        chronoString = "Chrono" + str(self.parent.chrono)
+        self.status = Label(self.root, text=chronoString, bd=1, relief=SUNKEN, anchor=W)
+        #self.status+=Label(self.root, text="SomeText", bd=1, relief=SUNKEN, anchor=E)
         self.status.pack(side=BOTTOM, fill=X)
     
     def aireDeJeu(self):    
         self.canvas=Canvas(self.root,width=450, height=450, bg='black')
         self.canvas.pack()
-        self.canvas.bind("<Button-1>", self.FinDuJeu())
+        self.canvas.bind("<Button-1>", self.debuter)
         
         
     def debuter(self,evt):                                      # cette fonctione lance la capacite de suivi
@@ -160,9 +162,11 @@ class Vue():
 
 class Controleur():
     def __init__(self):
+        self.chrono=0
         self.modele=Modele()
         self.vue=Vue(self, self.modele)
         self.vue.afficheAireDeJeu()
+        self.vue.root.after(1000, self.compterlessecondes)
         self.vue.root.mainloop()
 
     def demandeDeplacement(self):
@@ -175,6 +179,8 @@ class Controleur():
     def deplacer(self,x,y):                                 # fonction appelee par la vue lorsqu'un mouvement de souris est detecte
         self.modele.carreRouge.deplacer(x,y)                # on requiert cette action aupres du modele
         self.vue.afficheAireDeJeu()                         # on requiert cette action aupres de la vue apres les modifs au modele
+    def compterlessecondes(self):
+        self.chrono = self.chrono + 1
 
 if __name__ == '__main__':
     c=Controleur()
