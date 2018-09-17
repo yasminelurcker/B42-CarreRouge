@@ -1,5 +1,6 @@
-## -*- coding: utf8 -*-
+## -*- coding: utf-8 -*-
 from tkinter import *
+from tkinter import messagebox
 from timeit import default_timer
 """
 Fenetre = Tk()
@@ -99,7 +100,8 @@ class Vue():
         self.modele=modele
         self.root=Tk()
         self.root.title('JEU DU CARRÉ ROUGE')
-        self.root.wm_attributes('-topmost', 1) #Fenêtre de jeu en 1er plan
+        self.root.wm_attributes('-topmost', 1)  #Fenêtre de jeu en 1er plan
+        
         self.aireDeJeu()
         menu = Menu(self.root)
         self.root.config(menu=menu)
@@ -119,7 +121,8 @@ class Vue():
     def aireDeJeu(self):    
         self.canvas=Canvas(self.root,width=450, height=450, bg='black')
         self.canvas.pack()
-        self.canvas.bind("<Button-1>",self.debuter)
+        self.canvas.bind("<Button-1>", self.FinDuJeu())
+        
         
     def debuter(self,evt):                                      # cette fonctione lance la capacite de suivi
         t=self.canvas.gettags("current")                        # on obtient les tags du dessin (un seul) sous la souris
@@ -150,8 +153,10 @@ class Vue():
                                      self.modele.carreRouge.y+self.modele.carreRouge.sizey,
                                      fill="red",
                                      tags=("CarreRouge"))
-
-
+    def FinDuJeu(self):
+        # https://tkdocs.com/tutorial/windows.html#dialogs
+        if True:
+            messagebox.showinfo(message='Partie Finie')
 
 class Controleur():
     def __init__(self):
