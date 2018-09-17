@@ -158,7 +158,10 @@ class Vue():
 
     def FinDuJeu(self):
         self.canvas.delete(ALL)
-        messagebox.showinfo(message='Partie Finie')
+        chronoString = "Chrono" + str(self.parent.chrono)
+        retry = messagebox.askyesno(title='Fin de partie', message=chronoString)
+        #if not retry:
+            #self.root.quit
 
 
 class Controleur():
@@ -171,9 +174,9 @@ class Controleur():
         self.vue.root.mainloop()
 
     def demandeDeplacement(self):
-        self.modele.demandeDeplacementPions()
         self.modele.testerCollision()
         if self.modele.carreRouge.isAlive:
+            self.modele.demandeDeplacementPions()
             self.vue.afficheAireDeJeu()
             self.vue.root.after(10, self.demandeDeplacement)
         else:
@@ -184,6 +187,8 @@ class Controleur():
         self.vue.afficheAireDeJeu()                         # on requiert cette action aupres de la vue apres les modifs au modele
     def compterlessecondes(self):
         self.chrono = self.chrono + 1
+        self.vue.root.after(1000, self.compterlessecondes)
+
 
 if __name__ == '__main__':
     c=Controleur()
